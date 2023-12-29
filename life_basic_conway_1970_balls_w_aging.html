@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+
+<!--
+ Life (Orginal 1970 Conway) - Canvas
+ J. Nolan 19-APR-2020
+!-->
+
+<html>
+
+<head>
+    <title>1970 Life (Conway)</title>
+</head>
+
+<body style="font-family:sans-serif; font-size:15px; width:600px; 
+        margin-left:auto; margin-right:auto; background-color:#c0c0c0;">
+
+    <h1 style="font-size:24px; text-align:center;">1970 Life (Conway)</h1>
+	<h2 style="fong-size:12px; text-align:center;">Canvas/Javascript by: Jim Nolan (19-APR-2020)</h2>
+    
+	<canvas id="myCanvas" width="600" height="600"></canvas>
+	<script>
+	  
+	  var canvas = document.getElementById('myCanvas');
+	  var context = canvas.getContext('2d');
+	  var worldSize = 25; // N x N wher N is worldSize
+	  var lifeSize = 600/worldSize;
+	  var canvasWidth = canvas.width;
+	  var canvasHeight = canvas.height;
+	  var lifex = canvasWidth/lifeSize;
+	  var lifey = canvasHeight/lifeSize;
+	  var running = 0;
+	  
+	  var id = context.getImageData(0,0,canvasWidth,canvasHeight);
+	  
+	  var x; // Horizontal
+	  var y; // Vertical
+	  var maxx = lifex - 1;
+	  var maxy = lifey - 1;
+	  var timer;
+
+	  // Create 2 dimensional array for the world
+	  Array.matrix = function(numrows, numcols, initial) {
+		var arr = [];
+		for (var i = 0; i < numrows; ++i) {
+			var columns = [];
+			for (var j = 0; j < numcols; ++j) {
+				columns[j] = initial;
+			}
+			arr[i] = columns;
+		}
+		return arr;
+	  }
+	  var life = Array.matrix (lifex, lifey, 1);
+	  
+	  function randomLife () {
+		  // Randomize life in field
+		  for (x=0;x<lifex;x++) {
+			for (y=0;y<=lifey;y++) {
+				if (getRandomInt(2) == 1)
+					life[x][y] = 1;
+				else
+					life[x][y] = 0;
+			}
+		  }
+		  updateLife();
+	  }
+	  
+  function playLife() {
+
+	  // Use timer to iterate
+	  window.clearTimeout(timer);
+
+	  context.clearRect(0, 0, canvas.width, canvas.height);
+	  
+	  // Start plotting the balls
+	  var neighborCount = 0;
+	  var x;
+	  var y;
+				
+		// Age the Lift
+		// Neighbors are (x = life to age)
+		// 123
+		// 4x5
+		// 678
+	  
+		var t0 = performance.now();
+		
+		for (x=0;x<lifex;x++) {
+			for (y=0;y<=lifey;y++) {
+				// Count neighbor 1
+				if (x>0 && y>0)
+					if (life[x-1][y-1] >= 1)
+						neighborCount++;
+				// Count neighbor 2
+				if (y>0)
+					if(life[x][y-1] >= 1)
+						neighborCount++;
+				// Count neighbor 3
+				if (x<maxx && y>0)
+					if(life[x+1][y-1] >= 1)
+						neighborCount++;
+				// Count neighbor 4
+				if (x>0)
+					if(life[x-1][y] >= 1)
+						neighborCount++;
+				// Count neighbor 5
+				if (x<maxx)
+					if(life[x+1][y] >= 1)
+						neighborCount++;
+				// Count neighbor 6
+				if (x>0 && y<maxy)
+					if(life[x-1][y+1] >= 1)
+						neighborCount++;
+				// Count neighbor 7
+				if (y<maxy)
+					if (life[x][y+1] >= 1)
+						neighborCount++;
+				// Count neighbor 8
+				if (x<maxx && y<maxy)
+					if (life[x+1][y+1] >= 1)
+						neighborCount++;
+			
+				// Check the alive cell to see if it can still live
+				if (life[x][y] >= 1) {
+				
+					// Age cell
+					life[x][y] += 1;
+					
+					// Rule 1: Any live cell with fewer than two live neighbours dies, as if by underpopulation
+					if (neighborCount < 2)
+						life[x][y] = 0;
+					
+					// Rule 2: Any live cell with two or three live neighbours lives on to the next generation.
+					// Do nothing here.
+				
+					// Rule 3: Any live cell with more than three live neighbours dies, as if by overpopulation.
+					if (neighborCount > 3)
+						life[x][y] = 0;
+					
+					// Rule 5: Life > 20yo then it will die of old age.
+					if (life[x][y] > 20) {
+						life[x][y] = 0; // It aged out
+						//console.log("life killed");
+					}
+
+					// Rule 6: If a life = 10yo then NSWE children are born
+					if (life[x][y] == 10) {
+						if (y>0)
+							life[x][y-1] += 1; //Add/Age North child
+						if (y<maxy)
+							life[x][y+1] += 1; //Add/Age South child
+						if (x>0)
+							life[x-1][y] += 1; //Add/Age West child
+						if (x<maxx)
+							life[x+1][y] += 1; //Add/Age East Child
+					}
+				}
+
+				// Check dead cell
+				else {
+					// Rule 4: Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+					if (neighborCount == 3)
+						life[x][y] == 1;
+				}
+				
+				updateLife();
+				
+				//console.log("NeigborCount: "+neighborCount);
+				
+				neighborCount = 0; // Reset for the next life to be judged
+			} // end for y
+		} // end for x
+		
+		var t1 = performance.now();
+		//console.log("life processing too: " + (t1-t0) + "milliseconds.");
+		
+		if (running == 1)
+			timer = setTimeout(playLife, t1-t0+5); // reset timer
+	}
+		
+	 function updateLife () {
+		var x;
+		var y;
+		var cx = lifex;
+		var cy = lifey;
+		
+	  	context.clearRect(0, 0, canvas.width, canvas.height);
+		context.fillStyle = "#000000"; // Black	(for live cell)
+		// Draw grid
+		for (x=0;x<=canvasWidth;x=x+lifeSize) {
+		  context.beginPath();
+		  context.moveTo(x,0);
+		  context.lineTo(x,canvasHeight);
+		  context.stroke();
+		}
+		
+		for (y=0;y<=canvasHeight;y=y+lifeSize) {
+		  context.beginPath();
+		  context.moveTo(0,y);
+		  context.lineTo(canvasWidth,y);
+		  context.stroke();
+		}
+		
+		for (x=0;x<cx;x++) {
+			for (y=0;y<=cy;y++) {
+				if (life[x][y] >= 1) {
+					//context.fillRect( x*lifeSize, y*lifeSize, lifeSize, lifeSize );
+					// Draw the Ball
+					context.beginPath();
+					context.arc((x*lifeSize)+(lifeSize/2), (y*lifeSize)+(lifeSize/2), (lifeSize/2)-2, 0, 2 * Math.PI, false);
+					
+					if (life[x][y] < 5)
+					  context.fillStyle = 'black';
+					if (life[x][y] >=5)
+					  context.fillStyle = 'green';
+					if (life[x][y] >=10)
+					  context.fillStyle = 'yellow';
+					if (life[x][y] >=15)
+					  context.fillStyle = 'red';
+					  
+					context.fill();
+				}
+			}
+		}
+	  }
+	
+	function getRandomInt(max) {
+		return Math.floor(Math.random() * Math.floor(max));
+	}
+	 	 
+	function StartStopLife () {
+		const button = document.querySelector('input');
+		if (button.value === 'START') {
+		  button.value = "STOP";
+		  running = 1;
+		  playLife();
+		}
+		else {
+			running = 0;
+			button.value = "START";
+		}
+	}
+	 
+    </script>
+	
+	<center>
+	<button onclick="randomLife()">RANDOMIZE</button>   
+	<input type="button" value="START" id="myButton1" onclick=StartStopLife()></input>
+	<br>
+	<button onclick="window.close()">EXIT</button>   
+	</center>
+
+	<p>Rule 1: Any live cell with fewer than two live neighbours dies, as if by underpopulation</br></p>
+	<p>Rule 2: Any live cell with two or three live neighbours lives on to the next generation.</br></p>
+	<p>Rule 3: Any live cell with more than three live neighbours dies, as if by overpopulation.</br></p>
+	<p>Rule 4: Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.</br></p>
+	<p>Rule 5: Life > 20yo then it will die of old age.</br></p>
+	<p>Rule 6: If a life = 10yo then NSWE children are born</br></p>
+
+</body>
+
+</html>

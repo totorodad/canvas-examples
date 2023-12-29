@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+
+<!--
+ Radioactive - Canvas
+ J. Nolan 18-APR-2020
+!-->
+
+<html>
+
+<head>
+    <title>Spinballs</title>
+</head>
+
+<body style="font-family:sans-serif; font-size:15px; width:600px; 
+        margin-left:auto; margin-right:auto; background-color:#c0c0c0;">
+
+    <h1 style="font-size:24px; text-align:center;">Spinballs</h1>
+    
+	<canvas id="myCanvas" width="600" height="600"></canvas>
+    <script>
+	
+	  var canvas = document.getElementById('myCanvas');
+	  var context = canvas.getContext('2d');
+	  var centerX = canvas.width / 2;
+	  var centerY = canvas.height / 2;
+	  var radius = 250;
+	  var angle = 0;
+	  var circleX;
+	  var circleY;
+	  var phase = 0;
+	  var phase_radius;
+	  var ballX;
+	  var ballY;
+	  var ballRadius = 5;
+	  var timer;  // for animation timer
+	  var phases = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165];
+	  var angles = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165];
+	  var ball_positions_x = [];
+	  var ball_positions_y = [];
+	  var i;
+	  
+	  window.clearTimeout(timer);
+
+	  for (i=0;i<=11;i++) {
+	    phases[i] = getRandomInt(360);
+	  }
+	  
+	  // Start plotting the balls
+	  plotBalls();
+		
+	  function plotBalls () { 
+	  
+  	    context.clearRect(0, 0, canvas.width, canvas.height);
+	    //redrawBackground();
+		stitch_web();
+		
+		for (i=0;i<=11;i++) {
+			plotBall(i,phases[i],angles[i]);
+		}
+		  
+		// move the balls
+		for (i=0;i<=11;i++) {
+			  phases[i] = (phases[i] + 1)%360;
+			  //angles[i] = (angles[i] + 1)%360;
+		}
+		
+		timer = window.setTimeout(plotBalls, 10); // come back after 1/30th of a second
+	  }
+        	  
+	  // alert("done");
+	  
+	  function plotBall (ballnum, ballPhase, ballAngle) {
+			// Calculate the ball position at the current phase and ball Angle
+			//phase_radius = Math.cos((ballPhase/360.0) * 2.0 * Math.PI) * Math.sin((ballPhase/360.0) * 2.0 * Math.PI);
+			phase_radius = Math.cos((ballPhase/360.0) * 2.0 * Math.PI);
+			ballX = centerX + ((radius-ballRadius) * phase_radius * Math.sin(ballAngle/360.0 * 2.0 * Math.PI));
+			ballY = centerY + ((radius-ballRadius) * phase_radius * Math.cos(ballAngle/360.0 * 2.0 * Math.PI));
+
+			ball_positions_x[ballnum] = ballX;
+			ball_positions_y[ballnum] = ballY;
+			
+			// Draw the Ball
+			context.beginPath();
+			context.arc(ballX, ballY, ballRadius, 0, 2 * Math.PI, false);
+			context.fillStyle = 'white';
+			context.fill();
+		}
+	  
+	  function redrawBackground () {
+		  context.beginPath();
+		  context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+		  context.fillStyle = 'orange';
+		  context.fill();
+		  context.lineWidth = 1;
+		  context.strokeStyle = '#000000';
+		  
+		  // Draw Radiating lines
+		  for (angle = 0; angle < 360; angle += 15) {
+			 
+			 // Calculate the end of the radial on the circle perimeter
+			 circleX = centerX + (radius * Math.sin(angle/360.0 * 2 * Math.PI));
+			 circleY = centerY + (radius * Math.cos(angle/360.0 * 2 * Math.PI));
+			 
+			 context.moveTo(centerX,centerY);
+			 context.lineTo(circleX,circleY);
+		  }  
+		  context.stroke();
+		}
+	 
+	  function stitch_web () {
+		  var ballnum;
+		  var nearest_ballnum;
+		  
+		  context.beginPath();
+		  context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+		  context.fillStyle = 'red';
+		  context.fill();
+		  context.lineWidth = 1;
+		  context.strokeStyle = '#003300';
+		  
+		  // Draw Radiating lines
+		  for (ballnum = 0; ballnum < 12; ballnum += 1) {
+			
+			 nearest_ballnum = findNearest(ballnum);
+
+			 context.moveTo(ball_positions_x[nearest_ballnum],ball_positions_y[nearest_ballnum]);
+			 context.lineTo(ball_positions_x[ballnum], ball_positions_y[ballnum]);
+		  }  
+		  context.stroke();
+	  }
+	
+	function findNearest (ballnumber) {
+	  var min_distance=10000;
+	  var closest_ball = 1;
+	  var distance;
+	  var x1;
+	  var y1;
+	  var x2;
+	  var y2;
+
+	  for (ballnum = 0; ballnum < 12; ballnum += 1) {
+		x1 = ball_positions_x[ballnum];
+		y1 = ball_positions_y[ballnum];
+		x2 = ball_positions_x[ballnumber];
+	    y2 = ball_positions_y[ballnumber];
+
+		distance = Math.sqrt( Math.pow((x1-x2), 2) + Math.pow((y1-y2), 2) );
+			   
+	    if ((distance <= min_distance) && (ballnum != ballnumber)) {
+		   closest_ball = ballnum;
+		   min_distance = distance;
+		}	  
+	  }
+  	  return(closest_ball);
+    }
+
+	function getRandomInt(max) {
+		return Math.floor(Math.random() * Math.floor(max));
+	}
+	 
+    </script>
+
+</body>
+
+</html>
